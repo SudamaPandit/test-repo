@@ -43,7 +43,25 @@ def normalized_url(url: str) -> str:
 def make_job(source: str, title: str, company: str, location: str, url: str,
              description: str, posted: str = "", provider_tagged: bool = False) -> dict:
     status, evidence = extract_sponsorship(description)
-    return {"source": source, "title": plain(title), "company": plain(company),
+    # Job-fit signals drawn from the non-sensitive parts of the user's current CV.
+    searchable = f"{title} {description}"
+    skills = {
+        "Python": r"\\bpython\\b",
+        "SQL": r"\\bsql\\b",
+        "PySpark/Spark": r"\\b(?:pyspark|apache spark|spark structured streaming)\\b",
+        "AWS": r"\\b(?:aws|amazon web services|s3|glue|redshift)\\b",
+        "GCP/BigQuery": r"\\b(?:gcp|google cloud|bigquery|pub/sub)\\b",
+        "Azure/Databricks": r"\\b(?:azure|databricks)\\b",
+        "Snowflake": r"\\bsnowflake\\b",
+        "Airflow": r"\\bairflow\\b",
+        "Kafka": r"\\bkafka\\b",
+        "ETL/ELT": r"\\b(?:etl|elt|data pipeline)\\b",
+    }
+    matched = [name for name, rx in skills.items() if re.search(rx, searchable, re.I)]
+    senior = bool(re.search(r"\\b(?:senior|lead|staff|principal)\\b", title, re.I))
+    fit_score = min(100, 25 + 7 * len(matched) + (12 if senior else 0))
+    return {"fit_score": fit_score, "matched_skills": matched,
+            "source": source, "title": plain(title), "company": plain(company),
             "location": plain(location), "url": normalized_url(url), "posted": str(posted or ""),
             "sponsorship_status": status, "sponsorship_evidence": evidence,
             "provider_visa_tag": bool(provider_tagged),
@@ -187,7 +205,7 @@ def search_jobs(query: str = "senior data engineer", *, include_unverified=False
             continue
         seen.update((j["url"],identity))
         results.append(j)
-    results.sort(key=lambda j:(j["sponsorship_status"]=="explicit_description_claim",j["posted"]),reverse=True)
+    results.sort(key=lambda j:(j["sponsorship_status"]=="explicit_description_claim", j["fit_score"], j["posted"]),reverse=True)
     return {"jobs":results[:max_results],"total_matches":len(results),
             "searched_sources":[x[0] for x in sources],"source_errors":errors,
             "scope":"Europe + Queensland only in Australia",
