@@ -46,19 +46,19 @@ def make_job(source: str, title: str, company: str, location: str, url: str,
     # Job-fit signals drawn from the non-sensitive parts of the user's current CV.
     searchable = f"{title} {description}"
     skills = {
-        "Python": r"\\bpython\\b",
-        "SQL": r"\\bsql\\b",
-        "PySpark/Spark": r"\\b(?:pyspark|apache spark|spark structured streaming)\\b",
-        "AWS": r"\\b(?:aws|amazon web services|s3|glue|redshift)\\b",
-        "GCP/BigQuery": r"\\b(?:gcp|google cloud|bigquery|pub/sub)\\b",
-        "Azure/Databricks": r"\\b(?:azure|databricks)\\b",
-        "Snowflake": r"\\bsnowflake\\b",
-        "Airflow": r"\\bairflow\\b",
-        "Kafka": r"\\bkafka\\b",
-        "ETL/ELT": r"\\b(?:etl|elt|data pipeline)\\b",
+        "Python": r"\bpython\b",
+        "SQL": r"\bsql\b",
+        "PySpark/Spark": r"\b(?:pyspark|apache spark|spark structured streaming)\b",
+        "AWS": r"\b(?:aws|amazon web services|s3|glue|redshift)\b",
+        "GCP/BigQuery": r"\b(?:gcp|google cloud|bigquery|pub/sub)\b",
+        "Azure/Databricks": r"\b(?:azure|databricks)\b",
+        "Snowflake": r"\bsnowflake\b",
+        "Airflow": r"\bairflow\b",
+        "Kafka": r"\bkafka\b",
+        "ETL/ELT": r"\b(?:etl|elt|data pipeline)\b",
     }
     matched = [name for name, rx in skills.items() if re.search(rx, searchable, re.I)]
-    senior = bool(re.search(r"\\b(?:senior|lead|staff|principal)\\b", title, re.I))
+    senior = bool(re.search(r"\b(?:senior|lead|staff|principal)\b", title, re.I))
     fit_score = min(100, 25 + 7 * len(matched) + (12 if senior else 0))
     return {"fit_score": fit_score, "matched_skills": matched,
             "source": source, "title": plain(title), "company": plain(company),
